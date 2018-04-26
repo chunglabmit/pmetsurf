@@ -1,0 +1,69 @@
+import numpy as np
+import unittest
+from pmetsurf import ParametricSurface
+
+
+class TestParametricSurface(unittest.TestCase):
+    def make_dome_case(self):
+        """Make a partial spherical dome
+
+        Make a space going from - 1/sqrt(2) to 1 / sqrt(2) where
+        x = 10 * u
+        y = 10 * v
+        z = 10 - np.sqrt(x*x + y*y)
+        """
+        u = np.linspace(-1/np.sqrt(2), 1 / np.sqrt(2), 100)
+        v = np.linspace(-1/np.sqrt(2), 1 / np.sqrt(2), 100)
+        x = u[:, np.newaxis] * 10  + v[np.newaxis, :] * 0
+        y = u[:, np.newaxis] * 0 + v[np.newaxis, :] * 10
+        z = np.sqrt(100 - x*x - y*y)
+        return ParametricSurface(u, v, x, y, z)
+
+    def test_coordinates(self):
+        ps = self.make_dome_case()
+        u = [- .5, 0, 0]
+        v = [ 0, 0, .5]
+        x = [ -5, 0, 0]
+        y = [ 0, 0, 5]
+        z = [ 10 * np.sqrt(.75), 10, 10 * np.sqrt(.75)]
+        coords = ps[u, v]
+        for xx, yy, zz, (zzz, yyy, xxx) in zip(x, y, z, coords):
+            self.assertAlmostEqual(xx, xxx)
+            self.assertAlmostEqual(yy, yyy)
+            self.assertAlmostEqual(zz, zzz)
+
+    def test_normal(self):
+        ps = self.make_dome_case()
+        u = [- 10 / np.sqrt(2), 0, 0]
+        v = [ 0, 0, 10 / np.sqrt(2)]
+        x = [ -1 / np.sqrt(2), 0, 0]
+        y = [ 0, 0, 1 / np.sqrt(2)]
+        z = [ 1/np.sqrt(2), 1, 1/np.sqrt(2)]
+        normal = ps.normal(u, v)
+        for xx, yy, zz, (zzz, yyy, xxx) in zip(x, y, z, normal):
+            xx, yy, zz, xxx, yyy, zzz = [
+                0 if np.abs(_) < .0001 else _
+                for _ in (xx, yy, zz, xxx, yyy, zzz)]
+            if np.sign(zzz) != np.sign(zz):
+                xx, yy, zz = -xx, -yy, -zz
+            self.assertAlmostEqual(np.abs(zzz), np.abs(zz), 4)
+            self.assertAlmostEqual(np.abs(yyy), np.abs(yy), 4)
+            self.assertAlmostEqual(np.abs(xxx), np.abs(xx), 4)
+
+    def test_curvature(self):
+        #
+        # TODO: a test case that's a saddle point
+        #
+        ps = self.make_dome_case()
+        u = [- 10 / np.sqrt(2), 0, 0]
+        v = [ 0, 0, 10 / np.sqrt(2)]
+        kmin = ps.kmin(u, v)
+        kmax = ps.kmax(u, v)
+        for kmin1 in kmin:
+            self.assertAlmostEqual(kmin1, 1.0 / 10, 3)
+        for kmax1 in kmax:
+            self.assertAlmostEqual(kmax1, 1.0 / 10, 3)
+
+
+if __name__ == '__main__':
+    unittest.main()

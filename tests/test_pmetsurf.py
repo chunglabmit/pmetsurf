@@ -1,6 +1,6 @@
 import numpy as np
 import unittest
-from pmetsurf import ParametricSurface
+from pmetsurf import ParametricSurface, ParametricCurve
 
 
 class TestParametricSurface(unittest.TestCase):
@@ -64,6 +64,31 @@ class TestParametricSurface(unittest.TestCase):
         for kmax1 in kmax:
             self.assertAlmostEqual(kmax1, 1.0 / 10, 3)
 
+
+class TestParametricCurve(unittest.TestCase):
+
+    def make_test_case(self):
+        t = np.linspace(-np.pi, np.pi, 100)
+        x = np.cos(t) * 10
+        y = np.sin(t) * 10
+        return ParametricCurve(x, y, t, 25)
+
+    def test_coordinates(self):
+        p = self.make_test_case()
+        t = np.random.RandomState(427).uniform(-np.pi, np.pi, 10)
+        expected_x = np.cos(t) * 10
+        expected_y = np.sin(t) * 10
+        actual_y, actual_x = p[t].transpose()
+        for ex, ey, ax, ay in zip(expected_x, expected_y, actual_x, actual_y):
+            self.assertAlmostEqual(ex, ax, 1)
+            self.assertAlmostEqual(ey, ay, 1)
+
+    def test_curvature(self):
+        p = self.make_test_case()
+        t = np.random.RandomState(427).uniform(-np.pi, np.pi, 10)
+        curvature = p.curvature(t)
+        for c in curvature:
+            self.assertAlmostEqual(c, 1 / 10, 2)
 
 if __name__ == '__main__':
     unittest.main()

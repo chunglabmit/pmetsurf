@@ -1,7 +1,7 @@
 # coding: utf8
 
 import numpy as np
-from scipy.interpolate import RectBivariateSpline
+from scipy.interpolate import RectBivariateSpline, LSQUnivariateSpline
 
 
 def vectordot(a, b):
@@ -261,4 +261,50 @@ class ParametricSurface:
         return self.H(u, v) - np.sqrt(np.square(self.H(u, v)) - self.K(u, v))
 
 
-all=[ParametricSurface]
+class ParametricCurve:
+    """A 2D parametric curve in X and Y parameterized by T"""
+
+    def __init__(self, x, y, t, n_knots):
+        """Initialize with points along the curve
+
+        :param x: the x coordinate of each point (a vector)
+        :param y: the y coordinate of each point (a vector)
+        :param t: the distance of the point from the beginning of the curve
+        :param n_knots: number of knots to use in spline - less means smoother
+        """
+        knots = np.linspace(t[0], t[-1], n_knots)[1:-1]
+        self.splx = LSQUnivariateSpline(t, x, knots)
+        self.sply = LSQUnivariateSpline(t, y, knots)
+
+    def __getitem__(self, t):
+        t1 = np.atleast_1d(t)
+        result = np.column_stack((self.sply(t), self.splx(t)))
+        if np.isscalar(t):
+            return result[0]
+        return result
+
+    def dx(self, t):
+        return self.splx.derivative()(t)
+
+    def dy(self, t):
+        return self.sply.derivative()(t)
+
+    def dxx(self, t):
+        return self.splx.derivative(2)(t)
+
+    def dyy(self, t):
+        return self.sply.derivative(2)(t)
+
+    def curvature(self, t):
+        """Calculate the curvature at any point
+
+        From https://en.wikipedia.org/wiki/Curvature#Local_expressions
+        """
+        dx = self.dx(t)
+        dy = self.dy(t)
+        dxx = self.dxx(t)
+        dyy = self.dyy(t)
+        return np.abs(dx * dyy - dy * dxx) / np.power(dx * dx + dy * dy, 1.5)
+
+
+all=[ParametricSurface, ParametricCurve]

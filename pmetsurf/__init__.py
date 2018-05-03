@@ -1,1 +1,1 @@
-from .pmetsurf import ParametricSurface
+from .pmetsurf import ParametricSurface, ParametricCurve

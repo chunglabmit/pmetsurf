@@ -295,6 +295,16 @@ class ParametricCurve:
     def dyy(self, t):
         return self.sply.derivative(2)(t)
 
+    def normal(self, t):
+        t1 = np.atleast_1d(t)
+        dx = self.dx(t1)
+        dy = self.dy(t1)
+        dt = np.sqrt(np.square(dx) + np.square(dy))
+        result = np.column_stack((dx / dt, -dy / dt))
+        if np.isscalar(t):
+            return result[0]
+        return result
+
     def curvature(self, t):
         """Calculate the curvature at any point
 

@@ -69,19 +69,29 @@ class TestParametricCurve(unittest.TestCase):
 
     def make_test_case(self):
         t = np.linspace(-np.pi, np.pi, 100)
-        x = np.cos(t) * 10
-        y = np.sin(t) * 10
+        x = np.sin(t) * 10
+        y = np.cos(t) * 10
         return ParametricCurve(x, y, t, 25)
 
     def test_coordinates(self):
         p = self.make_test_case()
         t = np.random.RandomState(427).uniform(-np.pi, np.pi, 10)
-        expected_x = np.cos(t) * 10
-        expected_y = np.sin(t) * 10
+        expected_x = np.sin(t) * 10
+        expected_y = np.cos(t) * 10
         actual_y, actual_x = p[t].transpose()
         for ex, ey, ax, ay in zip(expected_x, expected_y, actual_x, actual_y):
             self.assertAlmostEqual(ex, ax, 1)
             self.assertAlmostEqual(ey, ay, 1)
+
+    def test_normal(self):
+        p = self.make_test_case()
+        angles = [ 0, np.pi / 4, np.pi / 2, 3 * np.pi / 4]
+        x_expected = [ 0, np.sqrt(.5), 1, np.sqrt(.5)]
+        y_expected = [ 1, np.sqrt(.5), 0, -np.sqrt(.5)]
+        y_actual, x_actual = p.normal(angles).transpose()
+        for xa, ya, xe, ye in zip(x_actual, y_actual, x_expected, y_expected):
+            self.assertAlmostEqual(xa, xe, 1)
+            self.assertAlmostEqual(ya, ye, 1)
 
     def test_curvature(self):
         p = self.make_test_case()
